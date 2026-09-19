@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Пошук вакансій</title>
+<style>
+  :root{
+    --bg:#f7f8f6;
+    --surface:#ffffff;
+    --border:#e1e6e0;
+    --text:#1a1f1c;
+    --muted:#667069;
+    --accent:#0d9488;
+    --accent-soft:#e6f6f4;
+    --new-bg:#0d9488;
+    --new-text:#ffffff;
+    --remote-bg:#e6f0ff;
+    --remote-text:#1d4ed8;
+    --onsite-bg:#f1ede6;
+    --onsite-text:#7a6a4a;
+    --danger:#b91c1c;
+    --danger-soft:#fde3e3;
+    --radius:12px;
+    --shadow:0 1px 3px rgba(16,24,20,.06), 0 1px 2px rgba(16,24,20,.04);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#101413;
+      --surface:#191f1d;
+      --border:#2b332f;
+      --text:#eaf0ec;
+      --muted:#93a19a;
+      --accent:#2dd4bf;
+      --accent-soft:#173330;
+      --remote-bg:#1c2c4a;
+      --remote-text:#93b4ff;
+      --onsite-bg:#2c2820;
+      --onsite-text:#d8c393;
+      --danger-soft:#3a1f1f;
+      --shadow:0 1px 3px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#101413;
+    --surface:#191f1d;
+    --border:#2b332f;
+    --text:#eaf0ec;
+    --muted:#93a19a;
+    --accent:#2dd4bf;
+    --accent-soft:#173330;
+    --remote-bg:#1c2c4a;
+    --remote-text:#93b4ff;
+    --onsite-bg:#2c2820;
+    --onsite-text:#d8c393;
+    --danger-soft:#3a1f1f;
+    --shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:1280px;
+    margin:0 auto;
+    padding:24px 16px 64px;
+  }
+  header.page-header{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  h1{
+    font-size:22px;
+    margin:0 0 4px;
+    font-weight:700;
+  }
+  .subtitle{
+    color:var(--muted);
+    font-size:13px;
+    margin:0;
+    max-width:60ch;
+  }
+  .how-it-works{
+    background:var(--accent-soft);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:10px 14px;
+    font-size:12.5px;
+    color:var(--text);
+    margin-bottom:16px;
+    line-height:1.5;
+  }
+  .how-it-works b{color:var(--accent);}
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .stat-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:12px 14px;
+    box-shadow:var(--shadow);
+  }
+  .stat-card .n{
+    font-size:22px;
+    font-weight:700;
+    line-height:1.1;
+    font-variant-numeric:tabular-nums;
+  }
+  .stat-card .l{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:2px;
+  }
+  .toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  .toolbar .spacer{flex:1;}
+  input[type="text"], input[type="search"], select{
+    background:var(--surface);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:13px;
+    font-family:inherit;
+  }
+  input:focus, select:focus{
+    outline:2px solid var(--accent);
+    outline-offset:1px;
+  }
+  button{
+    font-family:inherit;
+    font-size:13px;
+    font-weight:600;
+    border-radius:8px;
+    padding:8px 14px;
+    border:1px solid transparent;
+    cursor:pointer;
+    transition:filter .12s ease;
+  }
+  button:disabled{opacity:.55; cursor:default;}
+  button:hover:not(:disabled){filter:brightness(0.96);}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) button:hover:not(:disabled){filter:brightness(1.18);}
+  }
+  :root[data-theme="dark"] button:hover:not(:disabled){filter:brightness(1.18);}
+  .btn-primary{background:var(--accent); color:#fff;}
+  .btn-secondary{background:var(--surface); color:var(--text); border:1px solid var(--border);}
+  .status-line{
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:14px;
+    min-height:16px;
+  }
+  .status-line.is-error{color:var(--danger);}
+  .table-scroll{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    overflow-x:auto;
+  }
+  table{width:100%; border-collapse:collapse; min-width:820px;}
+  thead th{
+    text-align:left;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    color:var(--muted);
+    font-weight:600;
+    padding:10px 12px;
+    border-bottom:1px solid var(--border);
+    white-space:nowrap;
+    position:sticky;
+    top:0;
+    background:var(--surface);
+    z-index:1;
+  }
+  tbody tr{border-bottom:1px solid var(--border);}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr.is-new{background:color-mix(in srgb, var(--accent-soft) 60%, transparent);}
+  td{padding:10px 12px; vertical-align:top; font-size:13px;}
+  .company{font-weight:600;}
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    font-size:11px;
+    font-weight:700;
+    padding:2px 8px;
+    border-radius:999px;
+    white-space:nowrap;
+  }
+  .badge-new{background:var(--new-bg); color:var(--new-text);}
+  .badge-remote{background:var(--remote-bg); color:var(--remote-text);}
+  .badge-onsite{background:var(--onsite-bg); color:var(--onsite-text);}
+  .title-cell a{color:var(--text); text-decoration:none; font-weight:600;}
+  .title-cell a:hover{color:var(--accent); text-decoration:underline;}
+  .link-cell a{color:var(--accent); text-decoration:none; font-weight:600; font-size:12px;}
+  .link-cell a:hover{text-decoration:underline;}
+  .ai-cell{min-width:200px; max-width:280px;}
+  .ai-btn{
+    background:transparent;
+    border:1px dashed var(--border);
+    color:var(--accent);
+    font-size:11.5px;
+    padding:5px 10px;
+  }
+  .ai-summary-text{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:6px;
+    line-height:1.4;
+  }
+  .empty-state{
+    text-align:center;
+    color:var(--muted);
+    padding:48px 16px;
+    font-size:13px;
+  }
+  footer.note{margin-top:14px; color:var(--muted); font-size:12px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page-header">
+    <div>
+      <h1>Пошук вакансій</h1>
+      <p class="subtitle">Вакансії з відкритого джерела Arbeitnow: продажі, remote та офлайн. Дублікати приховані, нові — позначені.</p>
+    </div>
+  </header>
+
+  <div class="how-it-works">
+    <b>Як це працює:</b> застосунок сам перевіряє нові вакансії раз на добу, поки ця сторінка відкрита у вас в браузері (плюс кнопка «Оновити зараз» — коли завгодно). Усі вакансії зберігаються у вашому браузері, дублікати не додаються.
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="toolbar">
+    <input type="search" id="searchInput" placeholder="Посада (наприклад: sales, manager)..." style="min-width:200px;">
+    <input type="text" id="locationInput" placeholder="Країна / місто..." style="min-width:160px;">
+    <select id="remoteFilter">
+      <option value="">Remote і офлайн</option>
+      <option value="remote">Тільки remote</option>
+      <option value="onsite">Тільки офлайн</option>
+    </select>
+    <div class="spacer"></div>
+    <button class="btn-secondary" id="markSeenBtn">Позначити все переглянутим</button>
+    <button class="btn-primary" id="refreshBtn">↻ Оновити зараз</button>
+  </div>
+
+  <div class="status-line" id="statusLine"></div>
+
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Компанія</th>
+          <th>Посада</th>
+          <th>Локація</th>
+          <th>Зарплата</th>
+          <th>Дата</th>
+          <th>Посилання</th>
+          <th id="aiHeader" hidden>AI-опис</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty-state" id="emptyState" style="display:none;"></div>
+  </div>
+
+  <footer class="note">
+    Джерело даних: Arbeitnow (безкоштовне відкрите API, без реєстрації). Це джерело не завжди передає зарплату — тоді показуємо «не вказано». Дані живуть лише у вашому браузері.
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var JOBS_KEY = "jobSearchApp.jobs.v1";
+  var META_KEY = "jobSearchApp.meta.v1";
+  var API_URL = "https://www.arbeitnow.com/api/job-board-api";
+  var AUTO_REFRESH_MS = 24 * 60 * 60 * 1000;
+  var MAX_STORED_JOBS = 500;
+
+  var els = {
+    stats: document.getElementById("stats"),
+    tbody: document.getElementById("tbody"),
+    emptyState: document.getElementById("emptyState"),
+    searchInput: document.getElementById("searchInput"),
+    locationInput: document.getElementById("locationInput"),
+    remoteFilter: document.getElementById("remoteFilter"),
+    markSeenBtn: document.getElementById("markSeenBtn"),
+    refreshBtn: document.getElementById("refreshBtn"),
+    statusLine: document.getElementById("statusLine"),
+    aiHeader: document.getElementById("aiHeader")
+  };
+
+  var state = { jobs: [], lastFetchAt: null, isFetching: false };
+  var sampleNs = null;
+
+  function loadJobs(){
+    try{
+      var raw = localStorage.getItem(JOBS_KEY);
+      if(raw){
+        var parsed = JSON.parse(raw);
+        if(Array.isArray(parsed)) state.jobs = parsed;
+      }
+    }catch(e){ /* ignore corrupt storage */ }
+    try{
+      var metaRaw = localStorage.getItem(META_KEY);
+      if(metaRaw){
+        var meta = JSON.parse(metaRaw);
+        state.lastFetchAt = meta.lastFetchAt || null;
+      }
+    }catch(e){ /* ignore */ }
+  }
+
+  function saveJobs(){
+    try{ localStorage.setItem(JOBS_KEY, JSON.stringify(state.jobs)); }catch(e){}
+  }
+
+  function saveMeta(){
+    try{ localStorage.setItem(META_KEY, JSON.stringify({ lastFetchAt: state.lastFetchAt })); }catch(e){}
+  }
+
+  function escapeHtml(str){
+    return String(str == null ? "" : str).replace(/[&<>"']/g, function(ch){
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
+    });
+  }
+
+  function stripHtml(html){
+    var tmp = document.createElement("div");
+    tmp.innerHTML = String(html || "");
+    return (tmp.textContent || tmp.innerText || "").replace(/\s+/g, " ").trim();
+  }
+
+  function formatDate(unixSeconds){
+    if(!unixSeconds) return "—";
+    var d = new Date(unixSeconds * 1000);
+    if(isNaN(d.getTime())) return "—";
+    var mm = String(d.getMonth() + 1).padStart(2, "0");
+    var dd = String(d.getDate()).padStart(2, "0");
+    return d.getFullYear() + "-" + mm + "-" + dd;
+  }
+
+  function setStatus(text, isError){
+    els.statusLine.textContent = text || "";
+    els.statusLine.classList.toggle("is-error", !!isError);
+  }
+
+  function lastCheckedLabel(){
+    if(!state.lastFetchAt) return "Ще не перевірялося";
+    var d = new Date(state.lastFetchAt);
+    return "Востаннє перевірено: " + d.toLocaleString();
+  }
+
+  function mergeJobs(rawList){
+    var existingById = {};
+    state.jobs.forEach(function(j){ existingById[j.id] = j; });
+
+    var addedCount = 0;
+    rawList.forEach(function(raw){
+      var id = raw.slug || raw.url;
+      if(!id) return;
+      if(existingById[id]){
+        return;
+      }
+      var displayLocation = (raw.location && raw.location.trim())
+        ? raw.location.trim()
+        : (raw.remote ? "Remote" : "Не вказано");
+      var record = {
+        id: id,
+        company: raw.company_name || "Не вказано",
+        title: raw.title || "Без назви",
+        location: displayLocation,
+        remote: !!raw.remote,
+        salary: raw.salary && String(raw.salary).trim() ? String(raw.salary).trim() : null,
+        dateUnix: raw.created_at || null,
+        url: raw.url || "#",
+        descriptionText: stripHtml(raw.description).slice(0, 3000),
+        seen: false,
+        aiSummary: null
+      };
+      existingById[id] = record;
+      state.jobs.push(record);
+      addedCount++;
+    });
+
+    state.jobs.sort(function(a, b){ return (b.dateUnix || 0) - (a.dateUnix || 0); });
+    if(state.jobs.length > MAX_STORED_JOBS){
+      state.jobs = state.jobs.slice(0, MAX_STORED_JOBS);
+    }
+    return addedCount;
+  }
+
+  function fetchJobs(){
+    if(state.isFetching) return;
+    state.isFetching = true;
+    els.refreshBtn.disabled = true;
+    setStatus("Завантажую нові вакансії...");
+
+    fetch(API_URL)
+      .then(function(res){
+        if(!res.ok) throw new Error("Сервер відповів помилкою " + res.status);
+        return res.json();
+      })
+      .then(function(data){
+        var list = Array.isArray(data && data.data) ? data.data : [];
+        var added = mergeJobs(list);
+        state.lastFetchAt = Date.now();
+        saveJobs();
+        saveMeta();
+        setStatus(
+          (added > 0 ? "Додано нових вакансій: " + added + ". " : "Нових вакансій немає. ") +
+          lastCheckedLabel()
+        );
+        render();
+      })
+      .catch(function(err){
+        setStatus(
+          "Не вдалося завантажити вакансії. Перевірте інтернет-з'єднання і спробуйте ще раз. (" +
+          (err && err.message ? err.message : "помилка мережі") + ")",
+          true
+        );
+      })
+      .finally(function(){
+        state.isFetching = false;
+        els.refreshBtn.disabled = false;
+      });
+  }
+
+  function maybeAutoFetch(){
+    if(!state.lastFetchAt || (Date.now() - state.lastFetchAt) >= AUTO_REFRESH_MS){
+      fetchJobs();
+    }
+  }
+
+  function matchesFilters(job){
+    var q = els.searchInput.value.trim().toLowerCase();
+    var loc = els.locationInput.value.trim().toLowerCase();
+    var remoteMode = els.remoteFilter.value;
+
+    if(q && job.title.toLowerCase().indexOf(q) === -1 && job.company.toLowerCase().indexOf(q) === -1){
+      return false;
+    }
+    if(loc && job.location.toLowerCase().indexOf(loc) === -1){
+      return false;
+    }
+    if(remoteMode === "remote" && !job.remote) return false;
+    if(remoteMode === "onsite" && job.remote) return false;
+    return true;
+  }
+
+  function renderStats(visible){
+    var total = state.jobs.length;
+    var newCount = state.jobs.filter(function(j){ return !j.seen; }).length;
+    var remoteCount = state.jobs.filter(function(j){ return j.remote; }).length;
+    var cards = [
+      { n: total, l: "Усього вакансій" },
+      { n: newCount, l: "Нових" },
+      { n: remoteCount, l: "Remote" },
+      { n: visible.length, l: "Показано зараз" }
+    ];
+    els.stats.innerHTML = cards.map(function(c){
+      return '<div class="stat-card"><div class="n">' + c.n + '</div><div class="l">' + c.l + '</div></div>';
+    }).join("");
+  }
+
+  function renderRow(job){
+    var tr = document.createElement("tr");
+    tr.dataset.id = job.id;
+    if(!job.seen) tr.classList.add("is-new");
+
+    var remoteBadge = job.remote
+      ? '<span class="badge badge-remote">Remote</span>'
+      : '<span class="badge badge-onsite">Офлайн</span>';
+    var newBadge = !job.seen ? '<span class="badge badge-new">NEW</span> ' : '';
+
+    var aiCellHtml = "";
+    if(sampleNs){
+      aiCellHtml = '<td class="ai-cell">' +
+        (job.aiSummary
+          ? '<div class="ai-summary-text">' + escapeHtml(job.aiSummary) + '</div>'
+          : '<button class="ai-btn" data-action="ai-summary">✨ Короткий опис (AI)</button>') +
+        '</td>';
+    }
+
+    tr.innerHTML =
+      '<td class="company">' + escapeHtml(job.company) + '</td>' +
+      '<td class="title-cell">' + newBadge + '<a href="' + escapeHtml(job.url) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(job.title) + '</a></td>' +
+      '<td>' + escapeHtml(job.location) + ' ' + remoteBadge + '</td>' +
+      '<td>' + escapeHtml(job.salary || "не вказано") + '</td>' +
+      '<td>' + formatDate(job.dateUnix) + '</td>' +
+      '<td class="link-cell"><a href="' + escapeHtml(job.url) + '" target="_blank" rel="noopener noreferrer">🔗 Відкрити</a></td>' +
+      aiCellHtml;
+
+    return tr;
+  }
+
+  function render(){
+    var visible = state.jobs.filter(matchesFilters);
+    els.tbody.innerHTML = "";
+    visible.forEach(function(job){ els.tbody.appendChild(renderRow(job)); });
+
+    var noJobsAtAll = state.jobs.length === 0;
+    els.emptyState.style.display = visible.length === 0 ? "block" : "none";
+    els.emptyState.textContent = noJobsAtAll
+      ? "Поки що немає жодної вакансії. Натисніть «Оновити зараз»."
+      : "Нічого не знайдено за цими фільтрами.";
+
+    renderStats(visible);
+  }
+
+  function findJob(id){
+    for(var i = 0; i < state.jobs.length; i++){
+      if(state.jobs[i].id === id) return state.jobs[i];
+    }
+    return null;
+  }
+
+  els.tbody.addEventListener("click", function(e){
+    var btn = e.target.closest('[data-action="ai-summary"]');
+    if(!btn || !sampleNs) return;
+    var tr = e.target.closest("tr");
+    var job = findJob(tr.dataset.id);
+    if(!job) return;
+
+    btn.disabled = true;
+    btn.textContent = "Генерую...";
+
+    var prompt =
+      "Коротко (1-2 речення, українською мовою) опиши суть цієї вакансії для кандидата, без води і загальних фраз:\n\n" +
+      "Посада: " + job.title + "\n" +
+      "Компанія: " + job.company + "\n" +
+      "Опис:\n" + (job.descriptionText || "(опис відсутній)");
+
+    sampleNs(prompt, { modelTier: "quick" })
+      .then(function(result){
+        job.aiSummary = (result && result.text) ? result.text.trim() : "Не вдалося отримати опис.";
+        saveJobs();
+        render();
+      })
+      .catch(function(){
+        btn.disabled = false;
+        btn.textContent = "✨ Короткий опис (AI) — спробувати ще раз";
+      });
+  });
+
+  els.searchInput.addEventListener("input", render);
+  els.locationInput.addEventListener("input", render);
+  els.remoteFilter.addEventListener("change", render);
+  els.refreshBtn.addEventListener("click", fetchJobs);
+
+  els.markSeenBtn.addEventListener("click", function(){
+    state.jobs.forEach(function(j){ j.seen = true; });
+    saveJobs();
+    render();
+    setStatus("Усі вакансії позначено переглянутими. " + lastCheckedLabel());
+  });
+
+  function initAi(){
+    if(window.claude && typeof window.claude.use === "function"){
+      window.claude.use("sample").then(function(ns){
+        sampleNs = ns;
+        if(sampleNs){
+          els.aiHeader.hidden = false;
+          render();
+        }
+      }).catch(function(){ /* AI unavailable in this view */ });
+    }
+  }
+
+  loadJobs();
+  render();
+  setStatus(lastCheckedLabel());
+  initAi();
+  maybeAutoFetch();
+  setInterval(maybeAutoFetch, 60 * 60 * 1000);
+})();
+</script>
+</body>
+</html>
