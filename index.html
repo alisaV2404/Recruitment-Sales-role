@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Трекер співбесід</title>
+<style>
+  :root{
+    --bg:#f6f7fb;
+    --surface:#ffffff;
+    --border:#e3e6ee;
+    --text:#1c2130;
+    --muted:#6b7280;
+    --accent:#4f46e5;
+    --accent-soft:#eef0ff;
+    --radius:12px;
+    --shadow:0 1px 3px rgba(16,24,40,.06), 0 1px 2px rgba(16,24,40,.04);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12131a;
+      --surface:#1b1d27;
+      --border:#2c2f3d;
+      --text:#eceef4;
+      --muted:#9aa0b4;
+      --accent:#818cf8;
+      --accent-soft:#252a45;
+      --shadow:0 1px 3px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12131a;
+    --surface:#1b1d27;
+    --border:#2c2f3d;
+    --text:#eceef4;
+    --muted:#9aa0b4;
+    --accent:#818cf8;
+    --accent-soft:#252a45;
+    --shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:1280px;
+    margin:0 auto;
+    padding:24px 16px 64px;
+  }
+  header.page-header{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:20px;
+  }
+  h1{
+    font-size:22px;
+    margin:0 0 4px;
+    font-weight:700;
+  }
+  .subtitle{
+    color:var(--muted);
+    font-size:13px;
+    margin:0;
+  }
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .stat-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:12px 14px;
+    box-shadow:var(--shadow);
+  }
+  .stat-card .n{
+    font-size:22px;
+    font-weight:700;
+    line-height:1.1;
+  }
+  .stat-card .l{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:2px;
+  }
+  .toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+    margin-bottom:14px;
+  }
+  .toolbar .spacer{flex:1;}
+  input[type="text"], input[type="search"], select, input[type="date"]{
+    background:var(--surface);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:13px;
+    font-family:inherit;
+  }
+  input:focus, select:focus, textarea:focus{
+    outline:2px solid var(--accent);
+    outline-offset:1px;
+  }
+  button{
+    font-family:inherit;
+    font-size:13px;
+    font-weight:600;
+    border-radius:8px;
+    padding:8px 14px;
+    border:1px solid transparent;
+    cursor:pointer;
+    transition:filter .12s ease;
+  }
+  button:hover{filter:brightness(0.95);}
+  :root[data-theme="dark"] button:hover, @media (prefers-color-scheme: dark){button:hover{filter:brightness(1.15);}}
+  .btn-primary{
+    background:var(--accent);
+    color:#fff;
+  }
+  .btn-secondary{
+    background:var(--surface);
+    color:var(--text);
+    border:1px solid var(--border);
+  }
+  .btn-icon{
+    background:transparent;
+    color:var(--muted);
+    border:1px solid transparent;
+    padding:6px 8px;
+  }
+  .btn-icon:hover{
+    background:var(--accent-soft);
+    color:var(--accent);
+  }
+  .table-scroll{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    overflow-x:auto;
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    min-width:920px;
+  }
+  thead th{
+    text-align:left;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    color:var(--muted);
+    font-weight:600;
+    padding:10px 12px;
+    border-bottom:1px solid var(--border);
+    white-space:nowrap;
+    position:sticky;
+    top:0;
+    background:var(--surface);
+    z-index:1;
+  }
+  tbody tr{
+    border-bottom:1px solid var(--border);
+  }
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:var(--accent-soft);}
+  td{
+    padding:8px 12px;
+    vertical-align:top;
+    font-size:13px;
+  }
+  td input[type="text"], td input[type="url"], td input[type="date"], td textarea, td select{
+    width:100%;
+    min-width:120px;
+    border:1px solid transparent;
+    background:transparent;
+    padding:6px 6px;
+    border-radius:6px;
+  }
+  td input:hover, td textarea:hover, td select:hover{
+    border-color:var(--border);
+  }
+  td input:focus, td textarea:focus, td select:focus{
+    background:var(--surface);
+    border-color:var(--accent);
+  }
+  td textarea{
+    resize:vertical;
+    min-height:36px;
+    font-family:inherit;
+  }
+  .company-cell{min-width:160px;}
+  .link-cell{min-width:150px;}
+  .link-cell a{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    color:var(--accent);
+    text-decoration:none;
+    font-size:12px;
+    font-weight:600;
+  }
+  .link-cell a:hover{text-decoration:underline;}
+  .status-select{
+    font-weight:600;
+    font-size:12px;
+    padding:6px 8px;
+    border-radius:999px;
+    border:1px solid transparent;
+    appearance:none;
+    -webkit-appearance:none;
+    cursor:pointer;
+    background-repeat:no-repeat;
+    background-position:right 8px center;
+  }
+  .row-actions{white-space:nowrap;}
+  .empty-state{
+    text-align:center;
+    color:var(--muted);
+    padding:48px 16px;
+    font-size:13px;
+  }
+  footer.note{
+    margin-top:14px;
+    color:var(--muted);
+    font-size:12px;
+  }
+  .theme-toggle{
+    background:var(--surface);
+    border:1px solid var(--border);
+    color:var(--text);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page-header">
+    <div>
+      <h1>Трекер співбесід</h1>
+      <p class="subtitle">Усі відгуки, компанії та статуси — в одному місці. Дані зберігаються локально у вашому браузері.</p>
+    </div>
+    <button class="theme-toggle btn-icon" id="themeToggle" title="Перемкнути тему">🌓</button>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="toolbar">
+    <input type="search" id="searchInput" placeholder="Пошук за компанією, посадою, фаундером..." style="min-width:240px;">
+    <select id="statusFilter">
+      <option value="">Усі статуси</option>
+    </select>
+    <div class="spacer"></div>
+    <button class="btn-secondary" id="exportCsvBtn">⬇ Експорт CSV</button>
+    <button class="btn-primary" id="addRowBtn">+ Додати компанію</button>
+  </div>
+
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th class="company-cell">Компанія</th>
+          <th>Посада</th>
+          <th class="link-cell">Вакансія</th>
+          <th>Фаундер / контакт</th>
+          <th>Статус</th>
+          <th>Оновлено</th>
+          <th>Наступний крок / нотатки</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty-state" id="emptyState" style="display:none;">
+      Поки що немає жодного запису. Натисніть «+ Додати компанію», щоб почати.
+    </div>
+  </div>
+
+  <footer class="note">
+    Дані зберігаються у localStorage цього браузера (нікуди не надсилаються). Використовуйте «Експорт CSV», щоб зробити резервну копію.
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "interviewTrackerData.v1";
+  var THEME_KEY = "interviewTrackerTheme";
+
+  var STATUSES = [
+    { id: "applied",    label: "Відгук надіслано",       color: "#6b7280", bg: "#eef0f3" },
+    { id: "screening",  label: "Скринінг HR",             color: "#2563eb", bg: "#e6edff" },
+    { id: "technical",  label: "Технічна співбесіда",     color: "#7c3aed", bg: "#efe6ff" },
+    { id: "final",      label: "Фінальний етап",          color: "#c2410c", bg: "#ffe9db" },
+    { id: "feedback",   label: "Очікую фідбек",           color: "#a16207", bg: "#fff4d6" },
+    { id: "offer",      label: "Оффер",                   color: "#15803d", bg: "#e1f7e7" },
+    { id: "rejected",   label: "Відмова",                 color: "#b91c1c", bg: "#fde3e3" },
+    { id: "onhold",     label: "На паузі",                color: "#525252", bg: "#ececec" }
+  ];
+
+  var statusById = {};
+  STATUSES.forEach(function(s){ statusById[s.id] = s; });
+
+  var els = {
+    tbody: document.getElementById("tbody"),
+    stats: document.getElementById("stats"),
+    emptyState: document.getElementById("emptyState"),
+    searchInput: document.getElementById("searchInput"),
+    statusFilter: document.getElementById("statusFilter"),
+    addRowBtn: document.getElementById("addRowBtn"),
+    exportCsvBtn: document.getElementById("exportCsvBtn"),
+    themeToggle: document.getElementById("themeToggle")
+  };
+
+  var state = { rows: [] };
+
+  function uid(){
+    return "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  function todayStr(){
+    var d = new Date();
+    var mm = String(d.getMonth() + 1).padStart(2, "0");
+    var dd = String(d.getDate()).padStart(2, "0");
+    return d.getFullYear() + "-" + mm + "-" + dd;
+  }
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        var parsed = JSON.parse(raw);
+        if(Array.isArray(parsed.rows)) state.rows = parsed.rows;
+      }
+    }catch(e){ /* ignore corrupt storage */ }
+
+    if(state.rows.length === 0){
+      state.rows = [
+        {
+          id: uid(), company: "Приклад: Acme Inc.", position: "Sales Development Rep",
+          link: "https://example.com/jobs/sdr", founder: "Джон Сміт (Founder & CEO)",
+          status: "screening", updated: todayStr(), notes: "Дзвінок з рекрутером у пʼятницю о 15:00"
+        }
+      ];
+    }
+  }
+
+  function save(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ rows: state.rows }));
+    }catch(e){ /* storage unavailable */ }
+  }
+
+  function initStatusFilter(){
+    STATUSES.forEach(function(s){
+      var opt = document.createElement("option");
+      opt.value = s.id;
+      opt.textContent = s.label;
+      els.statusFilter.appendChild(opt);
+    });
+  }
+
+  function buildStatusOptionsHtml(selected){
+    return STATUSES.map(function(s){
+      return '<option value="' + s.id + '"' + (s.id === selected ? " selected" : "") + '>' + s.label + '</option>';
+    }).join("");
+  }
+
+  function matchesFilters(row){
+    var q = els.searchInput.value.trim().toLowerCase();
+    var statusF = els.statusFilter.value;
+    if(statusF && row.status !== statusF) return false;
+    if(!q) return true;
+    var haystack = [row.company, row.position, row.founder, row.notes].join(" ").toLowerCase();
+    return haystack.indexOf(q) !== -1;
+  }
+
+  function renderStats(){
+    var total = state.rows.length;
+    var active = state.rows.filter(function(r){ return r.status !== "rejected" && r.status !== "offer"; }).length;
+    var offers = state.rows.filter(function(r){ return r.status === "offer"; }).length;
+    var rejected = state.rows.filter(function(r){ return r.status === "rejected"; }).length;
+
+    var cards = [
+      { n: total, l: "Усього компаній" },
+      { n: active, l: "В активному процесі" },
+      { n: offers, l: "Офери" },
+      { n: rejected, l: "Відмови" }
+    ];
+
+    els.stats.innerHTML = cards.map(function(c){
+      return '<div class="stat-card"><div class="n">' + c.n + '</div><div class="l">' + c.l + '</div></div>';
+    }).join("");
+  }
+
+  function renderRow(row){
+    var tr = document.createElement("tr");
+    tr.dataset.id = row.id;
+
+    var st = statusById[row.status] || STATUSES[0];
+    var linkHtml = row.link
+      ? '<a href="' + escapeHtml(row.link) + '" target="_blank" rel="noopener noreferrer">🔗 Відкрити</a>'
+      : '';
+
+    tr.innerHTML =
+      '<td class="company-cell"><input type="text" data-field="company" value="' + escapeHtml(row.company || "") + '" placeholder="Назва компанії"></td>' +
+      '<td><input type="text" data-field="position" value="' + escapeHtml(row.position || "") + '" placeholder="Посада"></td>' +
+      '<td class="link-cell">' +
+        '<input type="url" data-field="link" value="' + escapeHtml(row.link || "") + '" placeholder="https://...">' +
+        '<div class="link-preview">' + linkHtml + '</div>' +
+      '</td>' +
+      '<td><input type="text" data-field="founder" value="' + escapeHtml(row.founder || "") + '" placeholder="Ім\'я фаундера / контакту"></td>' +
+      '<td><select class="status-select" data-field="status" style="color:' + st.color + '; background-color:' + st.bg + ';">' + buildStatusOptionsHtml(row.status) + '</select></td>' +
+      '<td><input type="date" data-field="updated" value="' + escapeHtml(row.updated || "") + '"></td>' +
+      '<td><textarea data-field="notes" placeholder="Наступний крок, нотатки...">' + escapeHtml(row.notes || "") + '</textarea></td>' +
+      '<td class="row-actions"><button class="btn-icon" data-action="delete" title="Видалити">🗑</button></td>';
+
+    return tr;
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, function(ch){
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
+    });
+  }
+
+  function render(){
+    var visible = state.rows.filter(matchesFilters);
+    els.tbody.innerHTML = "";
+    visible.forEach(function(row){
+      els.tbody.appendChild(renderRow(row));
+    });
+    els.emptyState.style.display = state.rows.length === 0 ? "block" : "none";
+    renderStats();
+  }
+
+  function findRow(id){
+    for(var i = 0; i < state.rows.length; i++){
+      if(state.rows[i].id === id) return state.rows[i];
+    }
+    return null;
+  }
+
+  els.tbody.addEventListener("input", function(e){
+    var field = e.target.dataset.field;
+    if(!field) return;
+    var tr = e.target.closest("tr");
+    var row = findRow(tr.dataset.id);
+    if(!row) return;
+    row[field] = e.target.value;
+    if(field === "status"){
+      row.updated = todayStr();
+    }
+    save();
+    if(field === "status" || field === "link"){
+      render();
+    } else {
+      renderStats();
+    }
+  });
+
+  els.tbody.addEventListener("change", function(e){
+    if(e.target.dataset.field === "status"){
+      var st = statusById[e.target.value];
+      e.target.style.color = st.color;
+      e.target.style.backgroundColor = st.bg;
+    }
+  });
+
+  els.tbody.addEventListener("click", function(e){
+    var btn = e.target.closest('[data-action="delete"]');
+    if(!btn) return;
+    var tr = e.target.closest("tr");
+    var row = findRow(tr.dataset.id);
+    if(!row) return;
+    if(confirm('Видалити запис "' + (row.company || "без назви") + '"?')){
+      state.rows = state.rows.filter(function(r){ return r.id !== row.id; });
+      save();
+      render();
+    }
+  });
+
+  els.addRowBtn.addEventListener("click", function(){
+    state.rows.unshift({
+      id: uid(), company: "", position: "", link: "", founder: "",
+      status: "applied", updated: todayStr(), notes: ""
+    });
+    save();
+    render();
+    var firstInput = els.tbody.querySelector('input[data-field="company"]');
+    if(firstInput) firstInput.focus();
+  });
+
+  els.searchInput.addEventListener("input", render);
+  els.statusFilter.addEventListener("change", render);
+
+  els.exportCsvBtn.addEventListener("click", function(){
+    var headers = ["Компанія", "Посада", "Вакансія", "Фаундер/контакт", "Статус", "Оновлено", "Нотатки"];
+    var lines = [headers.join(",")];
+    state.rows.forEach(function(r){
+      var st = statusById[r.status] || STATUSES[0];
+      var vals = [r.company, r.position, r.link, r.founder, st.label, r.updated, r.notes].map(function(v){
+        var s = String(v || "").replace(/"/g, '""');
+        return '"' + s + '"';
+      });
+      lines.push(vals.join(","));
+    });
+    var blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "interview-tracker-" + todayStr() + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  function applyStoredTheme(){
+    try{
+      var t = localStorage.getItem(THEME_KEY);
+      if(t === "dark" || t === "light"){
+        document.documentElement.setAttribute("data-theme", t);
+      }
+    }catch(e){}
+  }
+
+  els.themeToggle.addEventListener("click", function(){
+    var current = document.documentElement.getAttribute("data-theme");
+    var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var isDark = current ? current === "dark" : prefersDark;
+    var next = isDark ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
+  });
+
+  applyStoredTheme();
+  initStatusFilter();
+  load();
+  render();
+})();
+</script>
+</body>
+</html>
