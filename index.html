@@ -506,7 +506,7 @@
   els.searchInput.addEventListener("input", render);
   els.statusFilter.addEventListener("change", render);
 
-  els.exportCsvBtn.addEventListener("click", function(){
+  function buildCsvString(){
     var headers = ["Компанія", "Посада", "Вакансія", "Фаундер/контакт", "Статус", "Оновлено", "Нотатки"];
     var lines = [headers.join(",")];
     state.rows.forEach(function(r){
@@ -517,15 +517,35 @@
       });
       lines.push(vals.join(","));
     });
-    var blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+    return "﻿" + lines.join("\r\n");
+  }
+
+  function downloadViaAnchor(csv, filename){
+    var blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     var url = URL.createObjectURL(blob);
     var a = document.createElement("a");
     a.href = url;
-    a.download = "interview-tracker-" + todayStr() + ".csv";
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  }
+
+  els.exportCsvBtn.addEventListener("click", function(){
+    var csv = buildCsvString();
+    var filename = "interview-tracker-" + todayStr() + ".csv";
+    if(window.claude && typeof window.claude.use === "function"){
+      window.claude.use("downloads").then(function(downloads){
+        if(downloads){
+          downloads.save({ filename: filename, data: csv }).catch(function(){ /* declined or unavailable */ });
+        } else {
+          downloadViaAnchor(csv, filename);
+        }
+      });
+    } else {
+      downloadViaAnchor(csv, filename);
+    }
   });
 
   function applyStoredTheme(){
