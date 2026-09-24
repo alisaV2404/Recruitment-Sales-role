@@ -40,7 +40,12 @@ async function post<T>(url: string, body: unknown, signal?: AbortSignal): Promis
   return data as T;
 }
 
+export const STATIC_PREVIEW = !!(globalThis as { SECOND_LOOK_STATIC?: boolean }).SECOND_LOOK_STATIC;
+
 export async function fetchStatus(): Promise<StatusResponse> {
+  if (STATIC_PREVIEW) {
+    return { live: false, provider: null, model: null, reason: 'this hosted preview has no server; run the app locally with a model key for Live AI' };
+  }
   try {
     const res = await fetch('/api/status', { cache: 'no-store' });
     if (!res.ok) throw new Error(String(res.status));

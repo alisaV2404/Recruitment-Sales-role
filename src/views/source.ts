@@ -5,6 +5,8 @@ import { isStale, workingText, workingVersion } from '../model.js';
 import { textStats } from '../sections.js';
 import { errorBox } from './common.js';
 
+const BAD_CHAR = String.fromCharCode(0xfffd);
+
 const INJECTION_RE =
   /(ignore|disregard|forget)\s+(all\s+|any\s+)?(the\s+)?(previous|prior|above|earlier)\s+(instructions|prompts?)|you are now|system prompt|as an ai (model|assistant)/i;
 
@@ -15,7 +17,7 @@ function checks(text: string, source: { warnings: string[]; emptyPages: number[]
   if (INJECTION_RE.test(text)) {
     w.push('The text contains instruction-like phrases (e.g. “ignore previous instructions”). They will be treated as document content, not as commands.');
   }
-  if (/�/.test(text) && !w.some((x) => x.includes('�'))) w.push('The text contains undecodable characters (�). Check for recognition errors.');
+  if (text.includes(BAD_CHAR) && !w.some((x) => x.includes('could not be decoded'))) w.push('The text contains characters that could not be decoded. Check for recognition errors.');
   return w;
 }
 

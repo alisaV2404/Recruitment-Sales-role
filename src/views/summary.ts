@@ -1,6 +1,7 @@
 import * as app from '../app.js';
 import { state } from '../app.js';
 import { h } from '../dom.js';
+import { STATIC_PREVIEW } from '../api.js';
 import { counts } from '../model.js';
 import { summaryBody } from '../summary.js';
 
@@ -44,12 +45,15 @@ export function summaryView() {
         { class: 'row wrap' },
         h('button', { class: 'btn btn-small', onclick: () => app.go('workspace') }, '← Back to questions'),
         h('button', { class: 'btn btn-small btn-primary', onclick: () => void app.copyQuestions() }, 'Copy questions'),
-        h('button', { class: 'btn btn-small', onclick: () => app.downloadSummary() }, 'Download HTML'),
-        h('button', { class: 'btn btn-small', onclick: () => app.printSummary() }, 'Print'),
-        h('button', { class: 'btn btn-small', onclick: () => app.exportJson() }, 'Export review (JSON)'),
+        STATIC_PREVIEW ? null : h('button', { class: 'btn btn-small', onclick: () => app.downloadSummary() }, 'Download HTML'),
+        STATIC_PREVIEW ? null : h('button', { class: 'btn btn-small', onclick: () => app.printSummary() }, 'Print'),
+        STATIC_PREVIEW ? null : h('button', { class: 'btn btn-small', onclick: () => app.exportJson() }, 'Export review (JSON)'),
         importButton(),
       ),
     ),
+    STATIC_PREVIEW
+      ? h('p', { class: 'banner info no-print' }, 'Download HTML, Print and JSON export work when you run Second Look locally; this hosted preview cannot save files.')
+      : null,
     h('article', { class: 'summary-doc', html: summaryBody(s) }),
   );
 }

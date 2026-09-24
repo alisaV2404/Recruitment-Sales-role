@@ -237,7 +237,7 @@ export async function startFile(file: File) {
     if (lower.endsWith('.txt') || lower.endsWith('.md') || file.type === 'text/plain') {
       const text = (await file.text()).replace(/\r\n?/g, '\n');
       const warnings: string[] = [];
-      if (text.includes('�')) warnings.push('The file contains characters that could not be decoded (shown as �). It may not be UTF-8 encoded; check the text.');
+      if (text.includes(String.fromCharCode(0xfffd))) warnings.push('The file contains characters that could not be decoded. It may not be UTF-8 encoded; check the text.');
       if (!text.trim()) {
         state.ui.startError = `${name} is empty.`;
         return;
