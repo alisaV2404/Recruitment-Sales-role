@@ -1,0 +1,22 @@
+{
+  "name": "second-look",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Second Look \u2014 AI-powered appraisal review (prototype)",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.client.json && tsc -p tsconfig.server.json",
+    "start": "node build/server/server/index.js",
+    "dev": "npm run build && npm start",
+    "test": "npm run build && node --test build/server/tests/*.test.js",
+    "typecheck": "tsc -p tsconfig.client.json --noEmit && tsc -p tsconfig.server.json --noEmit",
+    "e2e": "npm run build && node scripts/e2e-smoke.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.2",
+    "@types/node": "^25.5.0"
+  }
+}
